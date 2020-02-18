@@ -1,0 +1,95 @@
+/*
+Radio    Arduino
+CE    -> 9
+CSN   -> 10 (Hardware SPI SS)
+MOSI  -> 11 (Hardware SPI MOSI)
+MISO  -> 12 (Hardware SPI MISO)
+SCK   -> 13 (Hardware SPI SCK)
+IRQ   -> No connection
+VCC   -> No more than 3.6 volts
+GND   -> GND
+
+*/
+
+#include <SPI.h>
+#include <NRFLite.h>
+#include <Servo.h>
+Servo myservo;
+int motor1 = 3;
+int motor2 = 4 ;
+int led1 = A0 ;
+int led2 = A1 ;
+int led3 = A2 ;
+int led4 = A3 ;
+
+const static uint8_t RADIO_ID = 0;       // Our radio's id.  The transmitter will send to this id.
+const static uint8_t PIN_RADIO_CE = 9;
+const static uint8_t PIN_RADIO_CSN = 10;
+
+struct RadioPacket // Any packet up to 32 bytes can be sent.
+{
+    uint8_t FromRadioId;
+    uint32_t OnTimeMillis;
+    uint32_t FailedTxCount;
+};
+
+NRFLite _radio;
+RadioPacket _radioData;
+
+void setup()
+{
+    pinMode(motor1,OUTPUT);
+    pinMode(motor2,OUTPUT);
+    pinMode(led1,OUTPUT);
+    pinMode(led2,OUTPUT);
+    pinMode(led3,OUTPUT);
+    pinMode(led4,OUTPUT);
+    myservo.attach(5);
+    Serial.begin(115200);
+    if (!_radio.init(RADIO_ID, PIN_RADIO_CE, PIN_RADIO_CSN))
+    {
+        //Serial.println("Cannot communicate with radio");
+        while (1); // Wait here forever.
+    }
+}
+void loop(){
+    digitalWrite(led1,LOW);
+    digitalWrite(led2,LOW);
+    digitalWrite(led3,LOW);
+    digitalWrite(led4,LOW);
+    while (_radio.hasData())
+    {
+        _radio.readData(&_radioData); // Note how '&' must be placed in front of the variable name.
+        //Serial.println(_radioData.FromRadioId);
+        int pos ;
+        if(_radioData.FromRadioId == 7){
+            for(pos = 90; pos > 55; pos-=1){
+               myservo.write(55);              
+               delay(4);
+           }myservo.write(90);
+       }
+       if(_radioData.FromRadioId == 8 ){
+           for(pos = 90; pos < 125; pos+=1){// goes from 0 degrees to 180 degrees
+              myservo.write(125);              // tell servo to go to position in variable 'pos'
+              delay(4);
+           }
+           myservo.write(90);  
+        }
+        if(_radioData.FromRadioId == 5){
+             digitalWrite(motor1,LOW);  
+             digitalWrite(motor2,HIGH);
+        }
+        if(_radioData.FromRadioId == 6){
+            digitalWrite(motor1,HIGH);  
+            digitalWrite(motor2,LOW);
+            digitalWrite(led3,HIGH);
+            digitalWrite(led4,HIGH);
+        }
+       if(_radioData.FromRadioId == 4){
+            digitalWrite(motor1,LOW);  
+            digitalWrite(motor2,LOW);
+            delay(10);
+        }
+     
+    }
+}

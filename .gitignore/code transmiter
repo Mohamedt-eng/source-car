@@ -1,0 +1,105 @@
+/* This sketch sends a packet with random data to another radio and waits for
+   the packet to be sent back.  It prints out the random data and the received data, which should be the same.
+*/
+
+#include <SPI.h>
+#include <NRFLite.h>
+
+const static uint8_t RADIO_ID = 1;             // Our radio's id.
+const static uint8_t DESTINATION_RADIO_ID = 0; // Id of the radio we will transmit to.
+const static uint8_t PIN_RADIO_CE = 9;
+const static uint8_t PIN_RADIO_CSN = 10;
+
+struct RadioPacket // Any packet up to 32 bytes can be sent.
+{
+    uint8_t FromRadioId;
+    uint32_t OnTimeMillis;
+    uint32_t FailedTxCount;
+};
+
+NRFLite _radio;
+RadioPacket _radioData;
+int but1 = 2;
+int but2 = 3 ;
+int but3 = 4;
+int but4 = 5;
+int but5 = 6;
+//const int sensorPin = A0;
+//int sensorValue;
+int numb[6]{8,7,6,5,4,3};
+//int maping;
+int butread1;
+int butread2;
+int butread3;
+int butread4;
+int butread5;
+void setup() {
+  
+    Serial.begin(115200);
+    pinMode(but1, INPUT_PULLUP);
+    pinMode(but2, INPUT_PULLUP);
+    pinMode(but3, INPUT_PULLUP);
+    pinMode(but4, INPUT_PULLUP);
+    pinMode(but5, INPUT_PULLUP);
+    //pinMode(sensorPin, INPUT);
+
+    if (!_radio.init(RADIO_ID, PIN_RADIO_CE, PIN_RADIO_CSN))
+    {
+        Serial.println("Cannot communicate with radio");
+        while (1); // Wait here forever.
+    }
+    
+    _radioData.FromRadioId = RADIO_ID;
+}
+
+void loop() {
+    int butread1;
+    int butread2;
+    int butread3;
+    int butread4;
+    int butread5;
+    butread1 = digitalRead(but1);
+    butread2 = digitalRead(but2);
+    butread3 = digitalRead(but3);
+    butread4 = digitalRead(but4);
+    butread5 = digitalRead(but5);
+    //sensorValue = analogRead(sensorPin);
+    //maping = map(sensorValue, 0, 1023, 20, 255);
+
+    if(butread1 == LOW){
+       _radio.send(DESTINATION_RADIO_ID, &numb[0], sizeof(numb[0]));
+       Serial.println("send:  ");
+       Serial.println(numb[0]);
+       delay(15);
+      
+      }
+    if(butread2 == LOW){
+       _radio.send(DESTINATION_RADIO_ID, &numb[1], sizeof(numb[1]));
+       Serial.println("send:  ");
+       Serial.println(numb[1]);
+       delay(15);
+    }
+    if(butread3 == LOW){
+       _radio.send(DESTINATION_RADIO_ID, &numb[2], sizeof(numb[2]));
+       Serial.println("send:  ");
+       Serial.println(numb[2]);
+    }
+    if(butread4 == LOW){
+       _radio.send(DESTINATION_RADIO_ID, &numb[3], sizeof(numb[3]));
+       Serial.println("send:  ");
+       Serial.println(numb[3]);
+    }
+    if(butread5 == LOW){
+       _radio.send(DESTINATION_RADIO_ID, &numb[4], sizeof(numb[4]));
+       Serial.println("send:  ");
+       Serial.println(numb[4]);
+    }
+    else{
+       //_radio.send(DESTINATION_RADIO_ID, &maping, sizeof(maping));
+       //Serial.println(maping);
+    
+       Serial.println("...Failed");
+      
+    }
+    delay(1);
+}
